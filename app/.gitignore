@@ -1,0 +1,15 @@
+# .NET
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# IDE
+.vs/
+.vscode/
+*.sln.user
+*.user
+
+# Project specific
+*.log
