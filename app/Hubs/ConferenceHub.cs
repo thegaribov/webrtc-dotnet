@@ -94,34 +94,6 @@ namespace WebRtcConference.Hubs
             });
         }
 
-        // Chat messages
-        public async Task SendChatMessage(string message)
-        {
-            if (Users.TryGetValue(Context.ConnectionId, out var user))
-            {
-                await Clients.Group(user.RoomId).SendAsync("ChatMessage", new
-                {
-                    userName = user.UserName,
-                    message = message,
-                    time = DateTime.Now.ToString("HH:mm:ss")
-                });
-            }
-        }
-
-        // Media state (audio/video)
-        public async Task SendMediaState(bool audio, bool video)
-        {
-            if (Users.TryGetValue(Context.ConnectionId, out var user))
-            {
-                await Clients.Group(user.RoomId).SendAsync("UserMediaState", new
-                {
-                    userId = Context.ConnectionId,
-                    audio = audio,
-                    video = video
-                });
-            }
-        }
-
         public override async Task OnDisconnectedAsync(Exception exception)
         {
             if (Users.TryRemove(Context.ConnectionId, out RoomUser roomUser))

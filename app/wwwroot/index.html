@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="az">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Şirkət Video Konfrans</title>
+    <title>Video Conference</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.17/signalr.min.js"></script>
     <script>
         // Check if SignalR loaded
@@ -166,22 +166,6 @@
             gap: 5px;
         }
 
-        .status-icon {
-            width: 30px;
-            height: 30px;
-            background: rgba(0,0,0,0.7);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-        }
-
-        .muted {
-            color: #ff4444;
-        }
-
         #sidebar {
             width: 350px;
             display: flex;
@@ -228,81 +212,6 @@
             background: #f44336;
         }
 
-        #chat-container {
-            flex: 1;
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        #chat-header {
-            padding: 15px;
-            background: rgba(0,0,0,0.2);
-            color: white;
-            font-weight: 600;
-        }
-
-        #chat-messages {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-        }
-
-        .chat-message {
-            margin-bottom: 15px;
-            background: rgba(255,255,255,0.2);
-            padding: 10px;
-            border-radius: 8px;
-            color: white;
-        }
-
-        .chat-message .sender {
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .chat-message .time {
-            font-size: 12px;
-            opacity: 0.7;
-        }
-
-        #chat-input-container {
-            padding: 15px;
-            background: rgba(0,0,0,0.2);
-            display: flex;
-            gap: 10px;
-        }
-
-        #chat-input {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-        }
-
-        #chat-input::placeholder {
-            color: rgba(255,255,255,0.6);
-        }
-
-        #send-btn {
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        #send-btn:hover {
-            background: #5568d3;
-        }
-
         @media (max-width: 1024px) {
             #main-content {
                 flex-direction: column;
@@ -316,16 +225,16 @@
 <body>
     <div id="login-container">
         <div id="login-box">
-            <h1>🎥 Video Konfrans</h1>
+            <h1>🎥 Video Conference</h1>
             <div class="input-group">
-                <label>Adınız:</label>
-                <input type="text" id="user-name" placeholder="Adınızı daxil edin">
+                <label>Your Name:</label>
+                <input type="text" id="user-name" placeholder="Enter your name">
             </div>
             <div class="input-group">
-                <label>Otaq ID:</label>
-                <input type="text" id="room-id" placeholder="Otaq ID daxil edin">
+                <label>Room ID:</label>
+                <input type="text" id="room-id" placeholder="Enter room ID">
             </div>
-            <button class="btn" onclick="joinRoom()">Qoşul</button>
+            <button class="btn" onclick="joinRoom()">Join</button>
         </div>
     </div>
 
@@ -338,29 +247,15 @@
             <div id="video-container">
                 <div class="video-wrapper">
                     <video id="local-video" autoplay muted playsinline></video>
-                    <div class="video-label">Siz</div>
-                    <div class="video-controls">
-                        <div class="status-icon" id="local-audio-status">🎤</div>
-                        <div class="status-icon" id="local-video-status">📹</div>
-                    </div>
+                    <div class="video-label">You</div>
                 </div>
             </div>
 
             <div id="sidebar">
                 <div id="controls">
-                    <button class="control-btn active" id="audio-btn" onclick="toggleAudio()" title="Mikrofon">🎤</button>
-                    <button class="control-btn active" id="video-btn" onclick="toggleVideo()" title="Kamera">📹</button>
-                    <button class="control-btn" id="screen-btn" onclick="toggleScreen()" title="Ekran paylaşımı">🖥️</button>
-                    <button class="control-btn" id="leave-btn" onclick="leaveRoom()" title="Çıxış">📞</button>
-                </div>
-
-                <div id="chat-container">
-                    <div id="chat-header">Çat</div>
-                    <div id="chat-messages"></div>
-                    <div id="chat-input-container">
-                        <input type="text" id="chat-input" placeholder="Mesaj yazın...">
-                        <button id="send-btn" onclick="sendMessage()">Göndər</button>
-                    </div>
+                    <button class="control-btn active" id="audio-btn" onclick="toggleAudio()" title="Microphone">🎤</button>
+                    <button class="control-btn active" id="video-btn" onclick="toggleVideo()" title="Camera">📹</button>
+                    <button class="control-btn" id="leave-btn" onclick="leaveRoom()" title="Exit">📞</button>
                 </div>
             </div>
         </div>
@@ -370,7 +265,6 @@
         let connection = null;
         const peers = new Map();
         let localStream = null;
-        let screenStream = null;
         let roomId = null;
         let userName = null;
         let audioEnabled = true;
@@ -415,8 +309,6 @@
             connection.on("Answer", handleAnswer);
             connection.on("IceCandidate", handleIceCandidate);
             connection.on("UserDisconnected", handleUserDisconnected);
-            connection.on("ChatMessage", handleChatMessage);
-            connection.on("UserMediaState", handleUserMediaState);
 
             try {
                 await connection.start();
@@ -432,7 +324,7 @@
             roomId = document.getElementById('room-id').value.trim();
 
             if (!userName || !roomId) {
-                alert('Zəhmət olmasa bütün məlumatları daxil edin');
+                alert('Please fill in all fields');
                 return;
             }
 
@@ -446,7 +338,7 @@
                 }
 
                 if (typeof signalR === 'undefined') {
-                    alert('SignalR kitabxanası yüklənmədi. Lütfən səhifəni yeniləyin və yenidən cəhd edin.');
+                    alert('SignalR library failed to load. Please refresh the page and try again.');
                     console.error("SignalR failed to load after 3 seconds");
                     return;
                 }
@@ -469,13 +361,13 @@
                 document.getElementById('local-video').srcObject = localStream;
                 document.getElementById('login-container').style.display = 'none';
                 document.getElementById('conference-container').style.display = 'block';
-                document.getElementById('room-info').textContent = `Otaq: ${roomId} | ${userName}`;
+                document.getElementById('room-info').textContent = `Room: ${roomId} | ${userName}`;
 
                 console.log("Joining room:", roomId);
                 await connection.invoke("JoinRoom", roomId, userName);
             } catch (error) {
                 console.error("Join room error:", error);
-                alert('Xəta baş verdi: ' + error.message);
+                alert('Error occurred: ' + error.message);
                 
                 // Clean up
                 if (localStream) {
@@ -587,18 +479,10 @@
 
             const label = document.createElement('div');
             label.className = 'video-label';
-            label.textContent = 'İştirakçı';
-
-            const controls = document.createElement('div');
-            controls.className = 'video-controls';
-            controls.innerHTML = `
-                <div class="status-icon" id="audio-${userId}">🎤</div>
-                <div class="status-icon" id="video-${userId}">📹</div>
-            `;
+            label.textContent = 'Participant';
 
             videoWrapper.appendChild(video);
             videoWrapper.appendChild(label);
-            videoWrapper.appendChild(controls);
             document.getElementById('video-container').appendChild(videoWrapper);
         }
 
@@ -614,19 +498,14 @@
             localStream.getAudioTracks()[0].enabled = audioEnabled;
             
             const btn = document.getElementById('audio-btn');
-            const status = document.getElementById('local-audio-status');
             
             if (audioEnabled) {
                 btn.classList.add('active');
                 btn.classList.remove('inactive');
-                status.classList.remove('muted');
             } else {
                 btn.classList.remove('active');
                 btn.classList.add('inactive');
-                status.classList.add('muted');
             }
-
-            connection.invoke("SendMediaState", audioEnabled, videoEnabled);
         }
 
         function toggleVideo() {
@@ -634,125 +513,19 @@
             localStream.getVideoTracks()[0].enabled = videoEnabled;
             
             const btn = document.getElementById('video-btn');
-            const status = document.getElementById('local-video-status');
             
             if (videoEnabled) {
                 btn.classList.add('active');
                 btn.classList.remove('inactive');
-                status.classList.remove('muted');
             } else {
                 btn.classList.remove('active');
                 btn.classList.add('inactive');
-                status.classList.add('muted');
             }
-
-            connection.invoke("SendMediaState", audioEnabled, videoEnabled);
-        }
-
-        async function toggleScreen() {
-            if (!screenStream) {
-                try {
-                    screenStream = await navigator.mediaDevices.getDisplayMedia({
-                        video: true
-                    });
-
-                    const videoTrack = screenStream.getVideoTracks()[0];
-                    
-                    peers.forEach(peerConnection => {
-                        const sender = peerConnection.getSenders().find(s => s.track?.kind === 'video');
-                        if (sender) {
-                            sender.replaceTrack(videoTrack);
-                        }
-                    });
-
-                    document.getElementById('local-video').srcObject = screenStream;
-                    document.getElementById('screen-btn').classList.add('active');
-
-                    videoTrack.onended = () => {
-                        stopScreenShare();
-                    };
-                } catch (error) {
-                    alert('Ekran paylaşımı başladıla bilmədi: ' + error.message);
-                }
-            } else {
-                stopScreenShare();
-            }
-        }
-
-        function stopScreenShare() {
-            if (screenStream) {
-                screenStream.getTracks().forEach(track => track.stop());
-                screenStream = null;
-
-                const videoTrack = localStream.getVideoTracks()[0];
-                peers.forEach(peerConnection => {
-                    const sender = peerConnection.getSenders().find(s => s.track?.kind === 'video');
-                    if (sender) {
-                        sender.replaceTrack(videoTrack);
-                    }
-                });
-
-                document.getElementById('local-video').srcObject = localStream;
-                document.getElementById('screen-btn').classList.remove('active');
-            }
-        }
-
-        function handleUserMediaState(data) {
-            const audioIcon = document.getElementById(`audio-${data.userId}`);
-            const videoIcon = document.getElementById(`video-${data.userId}`);
-            
-            if (audioIcon) {
-                if (data.audio) {
-                    audioIcon.classList.remove('muted');
-                } else {
-                    audioIcon.classList.add('muted');
-                }
-            }
-            
-            if (videoIcon) {
-                if (data.video) {
-                    videoIcon.classList.remove('muted');
-                } else {
-                    videoIcon.classList.add('muted');
-                }
-            }
-        }
-
-        async function sendMessage() {
-            const input = document.getElementById('chat-input');
-            const message = input.value.trim();
-            
-            if (message && connection) {
-                await connection.invoke("SendChatMessage", message);
-                input.value = '';
-            }
-        }
-
-        document.getElementById('chat-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        function handleChatMessage(data) {
-            const messagesDiv = document.getElementById('chat-messages');
-            const messageEl = document.createElement('div');
-            messageEl.className = 'chat-message';
-            messageEl.innerHTML = `
-                <div class="sender">${data.userName}</div>
-                <div>${data.message}</div>
-                <div class="time">${data.time}</div>
-            `;
-            messagesDiv.appendChild(messageEl);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
         function leaveRoom() {
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());
-            }
-            if (screenStream) {
-                screenStream.getTracks().forEach(track => track.stop());
             }
             
             peers.forEach(peerConnection => {
