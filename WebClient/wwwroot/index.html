@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Conference</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.17/signalr.min.js"></script>
+    <script>
+        // Check if SignalR loaded
+        window.addEventListener('load', function() {
+            if (typeof signalR === 'undefined') {
+                console.warn("SignalR not available from CDN, will retry");
+            } else {
+                console.log("SignalR loaded successfully");
+            }
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        #login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        #login-box h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #667eea;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        #conference-container {
+            display: none;
+            height: 100vh;
+            padding: 20px;
+        }
+
+        #conference-header {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #room-info {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        #main-content {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 140px);
+        }
+
+        #video-container {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            overflow-y: auto;
+        }
+
+        .video-wrapper {
+            position: relative;
+            background: #1a1a1a;
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
+        }
+
+        .video-wrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-label {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .video-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        #sidebar {
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #controls {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .control-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .control-btn.active {
+            background: #4CAF50;
+        }
+
+        .control-btn.inactive {
+            background: #f44336;
+        }
+
+        #leave-btn {
+            background: #f44336;
+        }
+
+        @media (max-width: 1024px) {
+            #main-content {
+                flex-direction: column;
+            }
+            #sidebar {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="login-container">
+        <div id="login-box">
+            <h1>?? Video Conference</h1>
+            <div class="input-group">
+                <label>Your Name:</label>
+                <input type="text" id="user-name" placeholder="Enter your name">
+            </div>
+            <div class="input-group">
+                <label>Room ID:</label>
+                <input type="text" id="room-id" placeholder="Enter room ID">
+            </div>
+            <button class="btn" onclick="joinRoom()">Join</button>
+        </div>
+    </div>
+
+    <div id="conference-container">
+        <div id="conference-header">
+            <div id="room-info"></div>
+        </div>
+
+        <div id="main-content">
+            <div id="video-container">
+                <div class="video-wrapper">
+                    <video id="local-video" autoplay muted playsinline></video>
+                    <div class="video-label">You</div>
+                </div>
+            </div>
+
+            <div id="sidebar">
+                <div id="controls">
+                    <button class="control-btn active" id="audio-btn" onclick="toggleAudio()" title="Microphone">??</button>
+                    <button class="control-btn active" id="video-btn" onclick="toggleVideo()" title="Camera">??</button>
+                    <button class="control-btn" id="leave-btn" onclick="leaveRoom()" title="Exit">??</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============= CONFIGURATION =============
+        let connection = null;
+        const peers = new Map();
+        let localStream = null;
+        let roomId = null;
+        let userName = null;
+        let audioEnabled = true;
+        let videoEnabled = true;
+
+        // Backend server URL configuration
+        let backendServerUrl = null;
+
+        // WebRTC STUN servers for NAT traversal
+        const configuration = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' }
+            ]
+        };
+
+        // ============= INITIALIZATION =============
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log("=== WebRTC WebClient Initialized ===");
+            
+            // Load backend configuration
+            await initializeConfig();
+            
+            console.log("Config loaded. Backend URL:", backendServerUrl);
+            console.log("=====================================");
+        });
+
+        // ============= CONFIGURATION LOADING =============
+        async function initializeConfig() {
+            try {
+                // Check localStorage first (highest priority)
+                const savedUrl = localStorage.getItem('backendServerUrl');
+                if (savedUrl) {
+                    backendServerUrl = savedUrl;
+                    console.log("✓ Backend URL from localStorage:", backendServerUrl);
+                    return;
+                }
+
+                // Try to fetch from config endpoint
+                try {
+                    const response = await fetch('/api/config', { 
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        const config = await response.json();
+                        backendServerUrl = config.backendServerUrl;
+                        console.log("✓ Backend URL from /api/config:", backendServerUrl);
+                        return;
+                    }
+                } catch (err) {
+                    console.warn("Could not fetch /api/config:", err.message);
+                }
+
+                // Localhost auto-detection (development mode)
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    backendServerUrl = `${window.location.protocol}//${window.location.hostname}:3000`;
+                    console.log("✓ Backend URL (localhost auto-detect):", backendServerUrl);
+                    return;
+                }
+
+                // Same host fallback (production proxy)
+                backendServerUrl = `${window.location.protocol}//${window.location.host}`;
+                console.log("✓ Backend URL (same host):", backendServerUrl);
+
+            } catch (err) {
+                console.error("Error loading configuration:", err);
+                backendServerUrl = `${window.location.protocol}//${window.location.hostname}:3000`;
+                console.log("⚠ Using fallback backend URL:", backendServerUrl);
+            }
+        }
+
+        // ============= SIGNALR CONNECTION =============
+        async function initializeSignalR() {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    // Wait for SignalR library
+                    let attempts = 0;
+                    while (typeof signalR === 'undefined' && attempts < 50) {
+                        console.log(`Waiting for SignalR library... (${attempts + 1}/50)`);
+                        await new Promise(r => setTimeout(r, 100));
+                        attempts++;
+                    }
+
+                    if (typeof signalR === 'undefined') {
+                        throw new Error('SignalR library failed to load from CDN');
+                    }
+
+                    console.log("✓ SignalR library loaded");
+
+                    // Ensure backend URL is set
+                    if (!backendServerUrl) {
+                        await initializeConfig();
+                    }
+
+                    console.log(`Connecting to backend: ${backendServerUrl}/conferenceHub`);
+
+                    // Create SignalR connection
+                    connection = new signalR.HubConnectionBuilder()
+                        .withUrl(`${backendServerUrl}/conferenceHub`, {
+                            skipNegotiation: false,
+                            transport: signalR.HttpTransportType.WebSockets,
+                            withCredentials: false
+                        })
+                        .withAutomaticReconnect({
+                            nextRetryDelayInMilliseconds: retryContext => {
+                                if (retryContext.previousRetryCount === 0) return 0;
+                                if (retryContext.previousRetryCount < 5) return 1000;
+                                if (retryContext.previousRetryCount < 10) return 3000;
+                                return 5000;
+                            }
+                        })
+                        .withHubMethodInvocation(false)
+                        .configureLogging(signalR.LogLevel.Information)
+                        .build();
+
+                    // Setup event handlers
+                    connection.on("RoomUsers", handleRoomUsers);
+                    connection.on("UserConnected", handleUserConnected);
+                    connection.on("Offer", handleOffer);
+                    connection.on("Answer", handleAnswer);
+                    connection.on("IceCandidate", handleIceCandidate);
+                    connection.on("UserDisconnected", handleUserDisconnected);
+
+                    // Handle connection events
+                    connection.onreconnected(connectionId => {
+                        console.log("✓ Reconnected to backend:", connectionId);
+                    });
+
+                    connection.onreconnecting(error => {
+                        console.warn("Reconnecting to backend...", error);
+                    });
+
+                    connection.onclose(error => {
+                        console.warn("Connection closed:", error);
+                    });
+
+                    // Start connection
+                    console.log("Starting SignalR connection...");
+                    await connection.start();
+                    console.log("✓ SignalR connected successfully");
+                    resolve();
+
+                } catch (error) {
+                    console.error("✗ SignalR connection error:", error);
+                    reject(error);
+                }
+            });
+        }
+
+        // ============= ROOM MANAGEMENT =============
+        async function joinRoom() {
+            userName = document.getElementById('user-name').value.trim();
+            roomId = document.getElementById('room-id').value.trim();
+
+            if (!userName || !roomId) {
+                alert('Please enter both name and room ID');
+                return;
+            }
+
+            try {
+                // Check secure context
+                const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+                if (!isSecure) {
+                    alert('HTTPS required for camera/microphone access');
+                    return;
+                }
+
+                console.log(`Joining room: ${roomId} as ${userName}`);
+
+                // Request media
+                console.log("Requesting camera/microphone access...");
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: { echoCancellation: true, noiseSuppression: true }
+                });
+                console.log("✓ Media stream acquired");
+
+                // Initialize SignalR if needed
+                if (!connection || connection.state === signalR.HubConnectionState.Disconnected) {
+                    console.log("Initializing SignalR connection...");
+                    await initializeSignalR();
+                }
+
+                // Display local video
+                const localVideo = document.getElementById('local-video');
+                localVideo.srcObject = localStream;
+
+                // Show conference UI
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('conference-container').style.display = 'block';
+                document.getElementById('room-info').textContent = `Room: ${roomId} | ${userName}`;
+
+                // Join room
+                console.log("Invoking JoinRoom on backend...");
+                await connection.invoke("JoinRoom", roomId, userName);
+                console.log("✓ Successfully joined room");
+
+            } catch (error) {
+                console.error("✗ Error joining room:", error);
+
+                let errorMsg = 'Error: ' + (error.message || 'Unknown error');
+
+                if (error.name === 'NotAllowedError') {
+                    errorMsg = 'Camera/Microphone access denied. Please allow access.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMsg = 'No camera/microphone found on your device.';
+                } else if (error.name === 'NotReadableError') {
+                    errorMsg = 'Camera/Microphone is in use by another application.';
+                } else if (error.message?.includes('connection') || error.message?.includes('404')) {
+                    errorMsg = `Cannot connect to backend at: ${backendServerUrl}\n\nPlease ensure the backend server is running.`;
+                }
+
+                alert(errorMsg);
+
+                // Cleanup
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                    localStream = null;
+                }
+            }
+        }
+
+        function handleRoomUsers(users) {
+            console.log(`Received ${users.length} existing users in room`);
+            users.forEach(async user => {
+                console.log(`Creating peer connection for existing user: ${user.userName}`);
+                await createPeerConnection(user.id, true);
+            });
+        }
+
+        function handleUserConnected(user) {
+            console.log(`New user connected: ${user.userName}`);
+            createPeerConnection(user.id, false);
+        }
+
+        // ============= WEBRTC CONNECTIONS =============
+        async function createPeerConnection(userId, isInitiator) {
+            if (peers.has(userId)) {
+                console.warn(`Peer connection already exists for ${userId}`);
+                return;
+            }
+
+            console.log(`Creating peer connection for ${userId} (initiator: ${isInitiator})`);
+
+            const peerConnection = new RTCPeerConnection(configuration);
+            peers.set(userId, peerConnection);
+
+            // Add local tracks
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            // Handle remote stream
+            peerConnection.ontrack = (event) => {
+                console.log(`Remote track received from ${userId}`);
+                const [remoteStream] = event.streams;
+                addVideoElement(userId, remoteStream);
+            };
+
+            // Handle ICE candidates
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    console.log(`Sending ICE candidate from ${userId}`);
+                    connection.invoke("SendIceCandidate", userId, JSON.stringify(event.candidate));
+                }
+            };
+
+            // Create and send offer if initiator
+            if (isInitiator) {
+                try {
+                    console.log(`Creating offer for ${userId}`);
+                    const offer = await peerConnection.createOffer();
+                    await peerConnection.setLocalDescription(offer);
+                    console.log(`Sending offer to ${userId}`);
+                    await connection.invoke("SendOffer", userId, offer.sdp);
+                } catch (error) {
+                    console.error(`Error creating offer for ${userId}:`, error);
+                }
+            }
+        }
+
+        async function handleOffer(data) {
+            console.log(`Received offer from ${data.sender}`);
+            let peerConnection = peers.get(data.sender);
+
+            if (!peerConnection) {
+                console.log(`No peer connection for ${data.sender}, creating one`);
+                await createPeerConnection(data.sender, false);
+                peerConnection = peers.get(data.sender);
+            }
+
+            try {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription({ type: "offer", sdp: data.sdp }));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                console.log(`Sending answer to ${data.sender}`);
+                await connection.invoke("SendAnswer", data.sender, answer.sdp);
+            } catch (error) {
+                console.error(`Error handling offer from ${data.sender}:`, error);
+            }
+        }
+
+        async function handleAnswer(data) {
+            console.log(`Received answer from ${data.sender}`);
+            const peerConnection = peers.get(data.sender);
+
+            if (peerConnection) {
+                try {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription({ type: "answer", sdp: data.sdp }));
+                } catch (error) {
+                    console.error(`Error handling answer from ${data.sender}:`, error);
+                }
+            }
+        }
+
+        async function handleIceCandidate(data) {
+            const peerConnection = peers.get(data.sender);
+            if (peerConnection) {
+                try {
+                    const candidate = JSON.parse(data.candidate);
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                } catch (error) {
+                    console.error(`Error adding ICE candidate from ${data.sender}:`, error);
+                }
+            }
+        }
+
+        function handleUserDisconnected(userId) {
+            console.log(`User disconnected: ${userId}`);
+            const peerConnection = peers.get(userId);
+            if (peerConnection) {
+                peerConnection.close();
+                peers.delete(userId);
+            }
+            removeVideoElement(userId);
+        }
+
+        // ============= VIDEO MANAGEMENT =============
+        function addVideoElement(userId, stream) {
+            if (document.getElementById(`video-${userId}`)) {
+                console.warn(`Video element already exists for ${userId}`);
+                return;
+            }
+
+            console.log(`Adding video element for ${userId}`);
+
+            const videoWrapper = document.createElement('div');
+            videoWrapper.className = 'video-wrapper';
+            videoWrapper.id = `wrapper-${userId}`;
+
+            const video = document.createElement('video');
+            video.id = `video-${userId}`;
+            video.srcObject = stream;
+            video.autoplay = true;
+            video.playsinline = true;
+
+            const label = document.createElement('div');
+            label.className = 'video-label';
+            label.textContent = 'Participant';
+
+            videoWrapper.appendChild(video);
+            videoWrapper.appendChild(label);
+            document.getElementById('video-container').appendChild(videoWrapper);
+        }
+
+        function removeVideoElement(userId) {
+            const wrapper = document.getElementById(`wrapper-${userId}`);
+            if (wrapper) {
+                wrapper.remove();
+                console.log(`Removed video element for ${userId}`);
+            }
+        }
+
+        // ============= MEDIA CONTROLS =============
+        function toggleAudio() {
+            if (!localStream) return;
+            audioEnabled = !audioEnabled;
+            localStream.getAudioTracks().forEach(track => track.enabled = audioEnabled);
+            
+            const btn = document.getElementById('audio-btn');
+            btn.classList.toggle('active', audioEnabled);
+            btn.classList.toggle('inactive', !audioEnabled);
+            console.log(`Audio: ${audioEnabled ? 'ON' : 'OFF'}`);
+        }
+
+        function toggleVideo() {
+            if (!localStream) return;
+            videoEnabled = !videoEnabled;
+            localStream.getVideoTracks().forEach(track => track.enabled = videoEnabled);
+            
+            const btn = document.getElementById('video-btn');
+            btn.classList.toggle('active', videoEnabled);
+            btn.classList.toggle('inactive', !videoEnabled);
+            console.log(`Video: ${videoEnabled ? 'ON' : 'OFF'}`);
+        }
+
+        function leaveRoom() {
+            console.log("Leaving room...");
+
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+
+            peers.forEach((peerConnection, userId) => {
+                peerConnection.close();
+                console.log(`Closed connection with ${userId}`);
+            });
+            peers.clear();
+
+            if (connection && connection.state === signalR.HubConnectionState.Connected) {
+                connection.stop();
+            }
+
+            console.log("✓ Left room successfully");
+            window.location.reload();
+        }
+    </script>
+</body>
+</html>
