@@ -16,7 +16,7 @@ namespace WebRtcBackend
             app.UseCors(builder =>
             {
                 builder
-                    .WithOrigins("https://localhost:7198")
+                    .WithOrigins("https://localhost:5000","https://192.168.68.236:5000")
                     .AllowCredentials()
                     .AllowAnyMethod()
                     .AllowAnyHeader();
