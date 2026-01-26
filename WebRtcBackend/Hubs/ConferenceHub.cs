@@ -94,6 +94,19 @@ namespace WebRtcBackend.Hubs
             });
         }
 
+        public async Task SendVideoFrame(string targetId, object frameData)
+        {
+            try
+            {
+                await Clients.Client(targetId).SendAsync("VideoFrame", frameData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in SendVideoFrame: {ex.Message}");
+                throw;
+            }
+        }
+
         public override async Task OnDisconnectedAsync(Exception exception)
         {
             if (Users.TryRemove(Context.ConnectionId, out RoomUser roomUser))

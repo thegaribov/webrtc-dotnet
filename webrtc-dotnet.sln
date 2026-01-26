@@ -1,12 +1,14 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.2.11415.280 d18.0
+VisualStudioVersion = 18.2.11415.280
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "app", "app", "{F95F473B-E98A-ACD6-1986-755F447BE36F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebClient", "WebClient\WebClient.csproj", "{098A019F-F8DF-4A08-A749-CE8F8114D7A8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebRtcBackend", "WebRtcBackend\WebRtcBackend.csproj", "{B4788DFA-7279-4AFD-A923-9081831B5FE5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleClient", "ConsoleClient\ConsoleClient.csproj", "{CC6B9CDF-3E58-4FFB-8C57-360789A37E40}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,6 +24,10 @@ Global
 		{B4788DFA-7279-4AFD-A923-9081831B5FE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B4788DFA-7279-4AFD-A923-9081831B5FE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B4788DFA-7279-4AFD-A923-9081831B5FE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC6B9CDF-3E58-4FFB-8C57-360789A37E40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC6B9CDF-3E58-4FFB-8C57-360789A37E40}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC6B9CDF-3E58-4FFB-8C57-360789A37E40}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC6B9CDF-3E58-4FFB-8C57-360789A37E40}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -29,6 +35,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{098A019F-F8DF-4A08-A749-CE8F8114D7A8} = {F95F473B-E98A-ACD6-1986-755F447BE36F}
 		{B4788DFA-7279-4AFD-A923-9081831B5FE5} = {F95F473B-E98A-ACD6-1986-755F447BE36F}
+		{CC6B9CDF-3E58-4FFB-8C57-360789A37E40} = {F95F473B-E98A-ACD6-1986-755F447BE36F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C98E0629-9B3B-4FCF-A7DA-3292C1B97580}
