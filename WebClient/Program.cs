@@ -7,7 +7,7 @@ namespace WebClient
             var builder = WebApplication.CreateBuilder(args);
             
             // Get backend server URL from environment
-            var backendServerUrl = Environment.GetEnvironmentVariable("BACKEND_SERVER_URL") ?? "http://localhost:3000";
+            var backendServerUrl = Environment.GetEnvironmentVariable("BACKEND_SERVER_URL") ?? "https://localhost:7232";
             
             builder.Services.AddCors(options =>
             {
@@ -66,7 +66,7 @@ namespace WebClient
 
             // Log startup info
             Console.WriteLine("=== WebRTC WebClient Server ===");
-            Console.WriteLine($"Port: http://0.0.0.0:5000");
+            Console.WriteLine($"Port: http://0.0.0.0:7198");
             Console.WriteLine($"Backend Server: {backendServerUrl}");
             Console.WriteLine($"Config Endpoint: /api/config");
             Console.WriteLine($"Info Endpoint: /api/info");
