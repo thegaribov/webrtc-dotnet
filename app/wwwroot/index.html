@@ -329,6 +329,35 @@
             }
 
             try {
+                // Check if we're in a secure context (HTTPS) or localhost
+                const isSecureContext = location.protocol === 'https:' || 
+                                       location.hostname === 'localhost' || 
+                                       location.hostname === '127.0.0.1' ||
+                                       location.hostname === '::1'; // IPv6 localhost
+
+                if (!isSecureContext) {
+                    alert('This application requires HTTPS for camera/microphone access. Please use: https://your-domain.com');
+                    console.error("Secure context required. Current protocol:", location.protocol);
+                    return;
+                }
+
+                // Check if mediaDevices API is available (after secure context check)
+                if (!navigator.mediaDevices) {
+                    console.error("navigator.mediaDevices is undefined", {
+                        protocol: location.protocol,
+                        hostname: location.hostname,
+                        isSecureContext: isSecureContext
+                    });
+                    alert('Media access is not available. Check the browser console for details.');
+                    return;
+                }
+
+                if (typeof navigator.mediaDevices.getUserMedia !== 'function') {
+                    console.error("getUserMedia is not a function");
+                    alert('Your browser does not support getUserMedia. Please use Chrome, Firefox, Safari, or Edge.');
+                    return;
+                }
+
                 // Wait for SignalR library to load
                 let attempts = 0;
                 while (typeof signalR === 'undefined' && attempts < 30) {
@@ -367,7 +396,19 @@
                 await connection.invoke("JoinRoom", roomId, userName);
             } catch (error) {
                 console.error("Join room error:", error);
-                alert('Error occurred: ' + error.message);
+                
+                // Provide more specific error messages
+                if (error.name === 'NotAllowedError') {
+                    alert('Camera/Microphone access denied. Please allow access and try again.');
+                } else if (error.name === 'NotFoundError') {
+                    alert('No camera/microphone found on your device.');
+                } else if (error.name === 'NotReadableError') {
+                    alert('Camera/Microphone is already in use by another application.');
+                } else if (error.name === 'SecurityError') {
+                    alert('Secure context (HTTPS) is required for media access.');
+                } else {
+                    alert('Error occurred: ' + error.message);
+                }
                 
                 // Clean up
                 if (localStream) {
