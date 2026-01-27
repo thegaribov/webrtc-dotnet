@@ -11,6 +11,25 @@ namespace WebRtcBackend
             builder.Services.AddControllers();
             builder.Services.AddSignalR();
 
+            // Configure CORS policy
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowWebClient", policy =>
+                {
+                    policy
+                        .WithOrigins(
+                            "https://localhost:5000", 
+                            "https://192.168.68.236:5000", 
+                            "https://127.0.0.1:5000",
+                            "http://localhost:5000", 
+                            "http://192.168.68.236:5000", 
+                            "http://127.0.0.1:5000")
+                        .AllowCredentials()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
+            });
+
             //// Configure HTTPS with certificate
             //var certPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "SSL", "192.168.68.236.cert.pem");
             //var keyPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "SSL", "192.168.68.236.key.pem");
@@ -47,19 +66,13 @@ namespace WebRtcBackend
 
             var app = builder.Build();
 
-
-            app.UseCors(builder =>
-            {
-                builder
-                    .WithOrigins("https://localhost:5000", "https://192.168.68.236:5000", "https://127.0.0.1:5000")
-                    .AllowCredentials()
-                    .AllowAnyMethod()
-                    .AllowAnyHeader();
-            });
+            // Apply CORS before mapping endpoints
+            app.UseCors("AllowWebClient");
 
             app.MapGet("/", () => "Web RTC Backend!");
 
-            app.MapHub<ConferenceHub>("/conferenceHub");
+            // Apply CORS to the SignalR hub endpoint
+            app.MapHub<ConferenceHub>("/conferenceHub").RequireCors("AllowWebClient");
 
             app.Run();
         }

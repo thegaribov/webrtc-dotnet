@@ -7,7 +7,7 @@ namespace WebClient
             var builder = WebApplication.CreateBuilder(args);
             
             // Get backend server URL from environment
-            var backendServerUrl = Environment.GetEnvironmentVariable("BACKEND_SERVER_URL") ?? "https://192.168.68.236:5000";
+            var backendServerUrl = Environment.GetEnvironmentVariable("BACKEND_SERVER_URL") ?? "https://192.168.68.236:5001";
             
             //// Configure HTTPS with certificate
             //var certPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "SSL", "192.168.68.236.cert.pem");

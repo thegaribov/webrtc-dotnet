@@ -323,7 +323,9 @@
                 }
 
                 // Localhost auto-detection (development mode)
-                if (window.location.hostname === '192.168.68.236' || window.location.hostname === '127.0.0.1') {
+                if (window.location.hostname === 'localhost' || 
+                    window.location.hostname === '192.168.68.236' || 
+                    window.location.hostname === '127.0.0.1') {
                     backendServerUrl = `${window.location.protocol}//${window.location.hostname}:5001`;
                     console.log("✓ Backend URL (localhost auto-detect):", backendServerUrl);
                     return;
